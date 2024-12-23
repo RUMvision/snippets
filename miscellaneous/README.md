@@ -1,0 +1,1 @@
+JavaScript snippets that do not fit in other categories.

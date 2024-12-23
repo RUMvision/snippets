@@ -1,0 +1,1 @@
+JavaScript snippets with `(Scheduler.)yield` examples to improve responsiveness and the INP metric
