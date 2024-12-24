@@ -1,0 +1,11 @@
+<!-- Allow preload scanner to detect the main file in time, 
+	but prevent it from being render-blocking -->
+<link rel="preload" href="https://use.typekit.net/xxxxxxx.css" as="style">
+<link href="https://use.typekit.net/xxxxxxx.css" rel="stylesheet">
+
+<!-- Fonts will be downloaded from the use.typekit.net as well, 
+	so preconnect (with crossorigin as we're dealing with font files) -->
+<link rel="preconnect" href="https://use.typekit.net" crossorigin>
+<!-- The CSS will download yet another CSS from t.typekit.net, 
+	so preconnect (but without crossorigin) -->
+<link rel="preconnect" href="https://p.typekit.net">

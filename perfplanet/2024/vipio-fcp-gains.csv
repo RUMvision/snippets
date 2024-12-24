@@ -1,7 +1,9 @@
 Metric,Pageviewtype,With @import (ms),Without @import (ms),Percentual Change
+FCP delta,all,1636,1026,-37.3%
 FCP delta,unique,1995,1177,-41%
 FCP delta,returning,1327,937,-29.4%
 FCP delta,successive,1076,748,-30.5%
+FCP,all,2247,1611,-28.3%
 FCP,unique,2782,1872,-32.7%
 FCP,returning,1796,1460,-18.7%
 FCP,successive,1567,1243,-20.7%
