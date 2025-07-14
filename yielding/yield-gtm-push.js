@@ -96,26 +96,53 @@ function yieldDataLayerPush() {
   // Store the original dataLayer.push function as originalPush
   window.dataLayer.originalPush = window.dataLayer.push;
 
-  // Override dataLayer.push
-  window.dataLayer.push = function () {
+  // Define our yielding push wrapper
+  const yieldingPush = function () {
     const e = [].slice.call(arguments, 0); // Convert arguments to an array
 
-    // Insert yield logic to break up long-running operations or give priority to rendering
     yieldToMain({
       mark: 'dataLayer',
       priority: isPriorityEvent(e) ? 'user-blocking' : 'background',
       event: e
     }).then(() => {
-      // Call the original dataLayer.push function with the arguments after yielding
       window.dataLayer.originalPush.apply(window.dataLayer, e);
     });
   };
+
+  // Protect our hijack by locking the push property
+  Object.defineProperty(window.dataLayer, 'push', {
+    configurable: false,
+    enumerable: true,
+    get() {
+      if (window.yieldCounter) {
+        console.debug('[yield-gtm-push] Accessed dataLayer.push');
+      }
+      return yieldingPush;
+    },
+    set(newValue) {
+      if (!window.yieldCounter) {
+	    return;
+      }
+       try {
+        throw new Error('[yield-gtm-push] Attempted overwrite of dataLayer.push');
+      } catch (e) {
+        console.groupCollapsed('[yield-gtm-push] Prevented overwrite of dataLayer.push');
+        console.log('Attempted assignment:', newValue);
+        console.log('Stack trace:\n', e.stack);
+        console.groupEnd();
+      }
+    }
+  });
 }
 
 var yieldObserver = new MutationObserver(() => {
   if (document.readyState === 'complete') {
-    // Abort and disconnect as dataLayer should have been created by now
-    return yieldObserver.disconnect();
+    // document state change, check if at least dataLayer was created, showing intent for GTM
+    if (!('dataLayer' in window)) {
+	  // No dataLayer var created yet, let's abort
+      yieldObserver.disconnect();
+      return; 
+    }
   }
   if (window.dataLayer && dataLayer.push !== Array.prototype.push) {
     // Ensure dataLayer.push has been replaced by GTM
