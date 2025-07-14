@@ -1,0 +1,1 @@
+JavaScript snippets related to Speculation Rules (prefetching and prerendering)
