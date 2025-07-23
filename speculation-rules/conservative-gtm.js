@@ -1,11 +1,12 @@
 let navigationType = null;
 function conservativeGTM(e) {
 	if (navigationType) {
+		// already successfully called before
 		return;
 	}
 	if (document.prerendering) {
-		/* let's try again later */
-		document.addEventListener('prerenderingchange', arguments.callee, { once: true });
+		// let's try again when it comes visible
+		document.addEventListener('prerenderingchange', conservativeGTM, { once: true });
 		return;
 	}
 
