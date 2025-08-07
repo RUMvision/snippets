@@ -1,6 +1,6 @@
 /*
 This JavaScript code snippet is designed to improve the user experience by leveraging the Back-Forward Cache (bfcache) for navigation when a user clicks a link that would effectively take them back to the previous page.
-/*
+*/
 (function(ref) {
 	if (!ref) { return };
 
