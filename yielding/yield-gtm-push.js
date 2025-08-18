@@ -25,27 +25,38 @@ function yieldToMain(options = {}) {
   options.mark = options.mark || 'void';
 
   if (window.yieldCounter) {
-    // Start counting + mark the start of yielding when yieldCounter exists
-	const eventName = (options.event[0]?.[1] || options.event[0]?.event || '');
-    yieldCounter[options.mark] = yieldCounter[options.mark] || 0;
-    markName = ['yieldToMain', options.mark, ++yieldCounter[options.mark], eventName].join('-');
+	options.counter = 1 + Object.keys(window.yieldCounter).length;
+	markName = options.counter + '-' + options.label;
+    yieldCounter[markName] = options;  
     performance.mark(markName + '-start');
+	console.trace("Trace for GTM push", options.label, options.event );
   }
 
   const setMarkMeasure = () => {
     if (!markName) {
 	    return;
 	}
+	
+	// special treatment/prefixing for parameters for GTM push event
+	const item = yieldCounter[markName];
+	const evt = item.event?.[0] || {};
+	const props = Object.entries( evt ).map(([key, value]) => [
+	  `param ${key}`,
+	  typeof value === "string" ? value: value.toString()
+	]);
+	
     performance.mark(markName + '-end');
-    performance.measure(markName, {
+    performance.measure( evt?.event || evt?.[0] || item.mark, {
 	  start: markName + '-start',
 	  end: markName + '-end',
 	  detail: {
 	    devtools: {
 	      dataType: "track-entry",
-	      track: "GTM",
+	      track: "GTM push",
 	      trackGroup: "Yielding",
-	      color: 'secondary-light'
+	      color: "secondary-light",
+		  tooltipText: item.counter + ": " + item.label + " (prio: " + item.priority + ")",
+		  properties: props
 	    }
 	  }
     });
@@ -81,10 +92,17 @@ function yieldToMain(options = {}) {
 
 // Define the list of priority events using regular expressions
 const gtmPriorityEventMatches = [/^add_to_cart$/];
-
-function isPriorityEvent(e) {
-  const eventName = (e[0]?.[1] || e[0]?.event || '');
-  if (typeof eventName !== 'string' || !eventName.length) {
+function getGtmEventName(e) {
+  /*
+	For example:
+		[['get', 'G-ABCDE12FGH', 'session_id']]
+	Or:
+		[{event: 'gtm.load'}]
+  */
+  return ( e[0]?.event || Object.values(e?.[0]).filter(v => typeof v === "string").join('-') || '' );
+}
+function isPriorityEvent(eventName) {
+  if ( !gtmPriorityEventMatches.length) {
     return false;
   }
 
@@ -99,10 +117,12 @@ function yieldDataLayerPush() {
   // Define our yielding push wrapper
   const yieldingPush = function () {
     const e = [].slice.call(arguments, 0); // Convert arguments to an array
+    const name = getGtmEventName(e); // Event name
 
     yieldToMain({
       mark: 'dataLayer',
-      priority: isPriorityEvent(e) ? 'user-blocking' : 'background',
+	  label: name,
+      priority: isPriorityEvent(name) ? 'user-blocking' : 'background',
       event: e
     }).then(() => {
       window.dataLayer.originalPush.apply(window.dataLayer, e);
@@ -124,7 +144,7 @@ function yieldDataLayerPush() {
 	    return;
       }
        try {
-        throw new Error('[yield-gtm-push] Attempted overwrite of dataLayer.push');
+        throw new Error('Attempted overwrite of dataLayer.push');
       } catch (e) {
         console.groupCollapsed('[yield-gtm-push] Prevented overwrite of dataLayer.push');
         console.log('Attempted assignment:', newValue);
