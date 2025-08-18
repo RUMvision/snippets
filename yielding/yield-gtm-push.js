@@ -91,7 +91,7 @@ function yieldToMain(options = {}) {
 }
 
 // Define the list of priority events using regular expressions
-const gtmPriorityEventMatches = [/^add_to_cart$/];
+const gtmPriorityEventMatches = [/^gtm\.(load|dom)$/,/^add_to_cart$/];
 function getGtmEventName(e) {
   /*
 	For example:
