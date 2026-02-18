@@ -17,6 +17,7 @@ header('Server-Timing: ' . Timer::toHeader());
 
 declare(strict_types=1);
 
+
 final class Timer
 {
     private static array $timers = [];
@@ -67,11 +68,7 @@ final class Timer
 
     public static function describe(string $key, string $description): void
     {
-		$timer = self::$timers[$key] ?? [];
-		$timer['stop'] = $timer['stop'] ?? 0;
-		$timer['desc'] = $description;
-
-        self::$timers[$key]	= $timer;
+		self::start($key, $description);
     }
 
     public static function getDuration(string $key): ?float
@@ -93,12 +90,8 @@ final class Timer
 
         $peak = memory_get_peak_usage(true);
         $delta = $peak - self::$memoryBaseline;
-
-        self::$timers['memory'] = [
-            'start' => 0.0,
-            'stop'  => 0.0,
-            'desc'  => 'usage=' . self::formatBytes($delta),
-        ];
+		
+		self::start('memory','usage=' . self::formatBytes($delta));
     }
 
     public static function addTotalFromRequest(): void
@@ -120,20 +113,25 @@ final class Timer
 
         foreach (self::$timers as $name => $timer) {
 
-            if (!isset($timer['start'], $timer['stop'])) {
+            if (!isset($timer['start'],$timer['stop']) && empty($timer['desc'])) {
                 continue;
             }
 
-            $durationMs = ($timer['stop'] - $timer['start']) * 1000;
             $metric = $name;
 
-            if ($durationMs >= 0) {
-                $metric .= sprintf(';dur=%.' . $decimals . 'f', $durationMs);
+            if (!empty($timer['stop'])) {
+                $metric .= sprintf(
+					';dur=%.' . $decimals . 'f', 
+					($timer['stop'] - $timer['start']) * 1000
+				);
             }
 
             if (!empty($timer['desc'])) {
                 $desc = self::escapeDescription($timer['desc']);
-                $metric .= sprintf(';desc="%s"', $desc);
+                $metric .= sprintf(
+					';desc="%s"', 
+					$desc
+				);
             }
 
             $metrics[] = $metric;
