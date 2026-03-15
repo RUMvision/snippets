@@ -1,39 +1,48 @@
 // More info:
 // https://www.rumvision.com/blog/prerender-until-script-in-between-prefetch-and-prerender/
 
-function enableChromeOriginTrial(token, until = '2026-09-08') {
+function enableChromeOriginTrial(token, minVersion = 144, maxVersion = 150) {
+    // Skip if token is missing
+    if (!token) {
+        return false;
+    }
 
-	// Skip if token is missing
-	if (!token) {
-		return false;
-	}
+    // Detect Google Chrome
+    const ua = navigator.userAgent;
+    const isChrome =
+        navigator.vendor === 'Google Inc.' &&
+        ua.includes('Chrome') &&
+        !ua.includes('Edg') && // Edge
+        !ua.includes('OPR') && // Opera
+        !ua.includes('SamsungBrowser');
 
-	// Skip if origin trial expired
-	if (Date.now() > new Date(until).getTime()) {
-		return false;
-	}
+    if (!isChrome) {
+        return false;
+    }
 
-	// Detect Google Chrome
-	const ua = navigator.userAgent;
-	const isChrome =
-		navigator.vendor === 'Google Inc.' &&
-		ua.includes('Chrome') &&
-		!ua.includes('Edg') &&      // Edge
-		!ua.includes('OPR') &&      // Opera
-		!ua.includes('SamsungBrowser');
+    // Extract Chrome major version
+    const match = ua.match(/Chrome\/(\d+)/);
+    const version = match ? parseInt(match[1], 10) : null;
 
-	if (!isChrome) {
-		return false;
-	}
+    // Skip if version cannot be determined
+    if (!version) {
+        return false;
+    }
 
-	// Inject origin trial token
-	const meta = document.createElement('meta');
-	meta.httpEquiv = 'origin-trial';
-	meta.content = token;
+    // Skip if outside allowed Chrome version range
+    if (version < minVersion || version > maxVersion) {
+        return false;
+    }
 
-	document.head.appendChild(meta);
+    // Inject origin trial token
+    const meta = document.createElement('meta');
+    meta.httpEquiv = 'origin-trial';
+    meta.content = token;
 
-	return true;
+    document.head.appendChild(meta);
+
+    return true;
+
 }
 
 
