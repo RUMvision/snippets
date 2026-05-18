@@ -61,7 +61,8 @@ HTML:
         const fallback = {
             entries: 2,
             interactions: 1,
-            lcp: false
+			subtract: false,
+			value: false,
         };
 
         const attr = entry.rootElement?.getAttribute('data-container-timing-until');
@@ -118,15 +119,24 @@ HTML:
             observer.disconnect();
         }
     }
+	
+	function getFinalValue(entry, field, subtract) {
+		const fallback = entry.presentationTime ?? entry.startTime;
+		const value = field ? entry[field] : fallback;
+
+		return Math.min(0, ( Number.isFinite(value) ? value: fallback ) - ( Number( subtract ) || 0 ) );
+	}
 
     function logEntry(entry, config, id) {
+		// metrics could contain your collected metrics, like TTFB and FCP
+		const metrics = {};
         // Prefer presentationTime when available. Fall back to startTime.
-        const value = Math.round(entry.presentationTime ?? entry.startTime);
+		const finalValue = getFinalValue(entry, config.value, metrics?.[config.subtract] );
 
         // Replace this with your own RUM endpoint.
         console.log('[ContainerTiming]', {
             id,
-            value,
+            finalValue,
             presentationTime: entry.presentationTime,
             startTime: entry.startTime,
             duration: entry.duration,
@@ -135,6 +145,8 @@ HTML:
             entry,
             config
         });
+		
+		
     }
 
     if (document.querySelector('[data-container-timing-until]')) {
