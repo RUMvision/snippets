@@ -1,35 +1,29 @@
 // More info:
 // https://www.rumvision.com/blog/prerender-until-script-in-between-prefetch-and-prerender/
+function isChromium(min = 144, max = 158) {
+	const version = Number(
+		navigator.userAgentData?.brands
+		?.find(({ brand }) => brand.toLowerCase() === 'chromium')
+		?.version
+	);
 
-function enableChromeOriginTrial(token, minVersion = 144, maxVersion = 150) {
+	return version >= min && version <= max;
+}
+
+function enableChromeOriginTrial(token, minVersion = 144, maxVersion = 158) {
     // Skip if token is missing
     if (!token) {
         return false;
     }
 
-    // Detect Google Chrome
-    const ua = navigator.userAgent;
-    const isChrome =
-        navigator.vendor === 'Google Inc.' &&
-        ua.includes('Chrome') &&
-        !ua.includes('Edg') && // Edge
-        !ua.includes('OPR') && // Opera
-        !ua.includes('SamsungBrowser');
-
-    if (!isChrome) {
-        return false;
-    }
-
-    // Extract Chrome major version
-    const match = ua.match(/Chrome\/(\d+)/);
-    const version = match ? parseInt(match[1], 10) : null;
-
-    // Skip if version cannot be determined
-    if (!version) {
-        return false;
-    }
-
-    // Skip if outside allowed Chrome version range
+    // Detect Chromium
+	const version = Number(
+		navigator.userAgentData?.brands
+		?.find(({ brand }) => brand.toLowerCase() === 'chromium')
+		?.version
+	);
+	
+    // Skip if outside allowed Chromium version range
     if (version < minVersion || version > maxVersion) {
         return false;
     }
@@ -49,6 +43,7 @@ function enableChromeOriginTrial(token, minVersion = 144, maxVersion = 150) {
 // Get your own token at:
 // https://developer.chrome.com/origintrials/#/view_trial/881016677104353281
 const originTrialToken = '';
+const sampling = 75;
 
 (function (specType, eagerness) {
 
@@ -80,6 +75,6 @@ const originTrialToken = '';
 	document.head.appendChild(script);
 
 })(
-	enableChromeOriginTrial(originTrialToken) ? 'prerender_until_script' : 'prefetch',
+	enableChromeOriginTrial(originTrialToken) && Math.random() < (sampling/100) ? 'prerender_until_script' : 'prefetch',
 	'conservative'
 );

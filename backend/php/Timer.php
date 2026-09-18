@@ -140,14 +140,14 @@ final class Timer
         return implode(', ', $metrics);
     }
 
-    private static function escapeDescription(string $desc): string
-    {
-        return str_replace(
-            ['"', "\r", "\n"],
-            ['\"', '', ''],
-            $desc
-        );
-    }
+	private static function escapeDescription(string $desc): string
+	{
+		return str_replace(
+			['\\', '"', "\r", "\n"],
+			['\\\\', '\\"', '', ''],
+			$desc
+		);
+	}
 
     private static function formatBytes(int $bytes): string
     {
