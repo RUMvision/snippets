@@ -7,5 +7,5 @@ addEventListener('pageshow', (event) => {
 			.serverTiming.find(e => e.name === 'speculation')?.description || 'unset';
 	}
 	window.rumv = window.rumv || function() {(window.rumv.q = window.rumv.q || []).push(arguments)};
-	rumv('dimension', 'experiments', speculationTag );
+	rumv('dimension', 'speculation_tags', speculationTag );
 });
